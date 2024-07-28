@@ -4,6 +4,7 @@ use rand::Rng;
 use regex::Regex;
 
 
+
 pub(crate) struct Handler;
 
 fn pega_formula(modifier : String) -> u32 {
