@@ -1,5 +1,6 @@
 mod commands;
 mod eventos;
+mod secret;
 
 use poise::{PrefixFrameworkOptions};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
@@ -13,8 +14,8 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 #[tokio::main]
 async fn main() {
-    // Get the discord token set in `Secrets.toml`
-    let discord_token : String = "MTI2NjEzMTczNjQ0NjYzMTk1Ng.Gy2m02.xp6Al4kBwqs_jI2urPOcrIZE0dzubyxyVbYKY8".to_string();
+
+    let discord_token = secret::get_discord_token();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
