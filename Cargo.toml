@@ -8,11 +8,9 @@ publish = false
 [dependencies]
 anyhow = "1.0.86"
 poise = "0.6.1"
-shuttle-runtime = "0.47.0"
-# Since poise is a serenity command framework, it can run on Shuttle with shuttle-serenity
-shuttle-serenity = "0.47.0"
+serenity = "0.12.2"
 tracing = "0.1.40"
-tokio = "1.39.1"
+tokio = { version = "1.39.1", features = ["rt", "rt-multi-thread", "macros"] }
 rand = "0.8.5"
 regex = "1.10.5"
 calc_engine = "0.4.1"

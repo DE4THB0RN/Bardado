@@ -1,11 +1,8 @@
 mod commands;
 mod eventos;
 
-use anyhow::Context as _;
 use poise::{PrefixFrameworkOptions};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
-use shuttle_runtime::SecretStore;
-use shuttle_serenity::ShuttleSerenity;
 
 
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -14,12 +11,10 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 
 
-#[shuttle_runtime::main]
-async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleSerenity {
+#[tokio::main]
+async fn main() {
     // Get the discord token set in `Secrets.toml`
-    let discord_token : String = secret_store
-        .get("DISCORD_TOKEN")
-        .context("'DISCORD_TOKEN' was not found")?;
+    let discord_token : String = "MTI2NjEzMTczNjQ0NjYzMTk1Ng.Gy2m02.xp6Al4kBwqs_jI2urPOcrIZE0dzubyxyVbYKY8".to_string();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -56,8 +51,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
     )
         .event_handler(eventos::Handler)
         .framework(framework)
-        .await
-        .map_err(shuttle_runtime::CustomError::new)?;
+        .await;
 
-    Ok(client.into())
+    client.unwrap().start().await.unwrap();
 }
