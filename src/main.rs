@@ -2,6 +2,7 @@ mod commands;
 mod eventos;
 mod music;
 mod statuses;
+mod dado;
 
 use anyhow::Context as _;
 use lavalink_rs::client::LavalinkClient;
@@ -19,7 +20,6 @@ struct Data {
 } // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
 
 
 #[shuttle_runtime::main]
@@ -65,6 +65,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 music::music_advanced::remove(),
                 music::music_advanced::swap(),
                 music::music_advanced::repete(), //Vamo lá,aparece aí
+                commands::dad0(),
             ], //
             ..Default::default()
 
@@ -83,7 +84,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 let usrid : u64 = ctx.cache.current_user().id.into();
 
                 let node_local = NodeBuilder {
-                    hostname: "node.lewdhutao.my.eu.org:80".to_string(),
+                    hostname: "lavalink.jirayu.net:13592".to_string(),
                     is_ssl: false,
                     events: events::Events::default(),
                     password: lavalink_password,

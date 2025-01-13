@@ -138,7 +138,7 @@ pub async fn play(
             term
         } else {
             SearchEngines::YouTube.to_query(&term)?;
-            SearchEngines::Deezer.to_query(&term)?;
+            //SearchEngines::Deezer.to_query(&term)?;
             SearchEngines::SoundCloud.to_query(&term)?;
             SearchEngines::Spotify.to_query(&term)?
         }
