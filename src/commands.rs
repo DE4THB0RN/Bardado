@@ -29,7 +29,7 @@ pub async fn dad0(
         operation = "+".to_string() + &operation;
     }
 
-    let resp = rolar_dados(jogadas, lados, dados, operation.as_str(),0);
+    let resp = rolar_dados(jogadas, lados, dados, operation.as_str(),0,"",&0).to_string();
 
     ctx.say(resp).await?;
 
