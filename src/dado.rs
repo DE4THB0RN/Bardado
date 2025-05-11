@@ -1,5 +1,6 @@
 use calc_engine::calculate;
 use rand::Rng;
+use regex::{Regex};
 
 fn pega_formula(modifier : String) -> u32 {
 
@@ -82,6 +83,7 @@ pub fn rolar_dado(lados : &u32,vezes : &u32, modif : &str, min : &u32, compare :
     tudo.push('→');
 
     let full_form = format!("{total}{modif}");
+    
     let mut res : u32 = total;
     if !modif.is_empty(){
         res = pega_formula(full_form)
@@ -138,7 +140,9 @@ pub fn rolar_dado(lados : &u32,vezes : &u32, modif : &str, min : &u32, compare :
             tudo.push_str(" ");
         }
     }
+    
     tudo.push_str(&comp);
+
     tudo
 }
 
@@ -154,4 +158,36 @@ pub fn rolar_dados(dados : u32,lados : u32,vezes : u32, modif : &str, min :u32, 
     }
 
     resp
+}
+
+pub fn processar_dado(data: &str) -> String{
+
+    let splitter = Regex::new(r"(\d*)#?(\d*)[Dd](\d+)(\s*[+\-*/]\s*\d+(\.\d+)?(?:\s*[+\-*/]\s*\d+(\.\d+)?)*)?(?:\s*(=|>=|<=|!=|<|>)\s*(\d+))?").unwrap();
+
+    let mut resp: String = String::new()    ;
+
+
+    for usos in splitter.captures_iter(data) {
+        let dados = usos[1].parse::<u32>().unwrap_or(1);
+        let quant = usos[2].parse::<u32>().unwrap_or(1);
+        let lados = usos[3].parse::<u32>().unwrap_or(8);
+        let modif = usos.get(4).map(|m| m.as_str()).unwrap_or("");
+
+        let compare = usos.get(7).map(|m| m.as_str()).unwrap_or(""); // Operador de comparação
+        let compai = usos.get(8).map(|m| m.as_str().parse::<u32>().unwrap_or(0)); // Número de comparação
+        let compa = compai.unwrap_or(0);
+
+        if data.contains('#') {
+            resp.push_str(rolar_dados(dados, lados, quant, modif,1, compare,&compa).as_str());
+        } else {
+            resp.push_str(rolar_dado(&lados, &dados, modif,&1, compare,&compa).as_str());
+        }
+        resp.push('\n');
+    }
+
+    if !resp.is_empty(){
+        return resp;
+    }
+
+    "".to_string()
 }
