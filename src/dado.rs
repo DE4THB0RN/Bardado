@@ -160,6 +160,15 @@ pub fn rolar_dados(dados : u32,lados : u32,vezes : u32, modif : &str, min :u32, 
     resp
 }
 
+pub fn dado_iniciativa(bonux : u32) -> u32{
+
+    let mut rng = rand::rng();
+    let x : u32;
+    x = rng.random_range(1..=8);
+    
+    x + bonux
+}
+
 pub fn processar_dado(data: &str) -> String{
 
     let splitter = Regex::new(r"(\d*)#?(\d*)[Dd](\d+)(\s*[+\-*/]\s*\d+(\.\d+)?(?:\s*[+\-*/]\s*\d+(\.\d+)?)*)?(?:\s*(=|>=|<=|!=|<|>)\s*(\d+))?").unwrap();

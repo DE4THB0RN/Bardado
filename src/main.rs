@@ -66,6 +66,9 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 music::music_advanced::swap(),
                 music::music_advanced::repete(), //Vamo lá,aparece aí
                 commands::dad0(),
+                commands::iniciativa(),
+                commands::limpar_iniciativa(),
+                commands::listar_iniciativa(),
             ], //
             ..Default::default()
 
