@@ -192,13 +192,13 @@ pub fn dado_iniciativa(bonux : u32) -> (u32,String){
     resposta.push(']');
     resposta.push('→');
 
-    if  total >= 7{
+    if  x >= 7{
         resposta.push_str(" **");
         resposta.push_str(&tot);
         resposta.push_str("** ");
         resposta.push_str(" **CRITIQUEI**");
     }
-    else if total <= 2{
+    else if x <= 2{
         resposta.push(' ');
         resposta.push('*');
         resposta.push_str(&tot);
