@@ -160,7 +160,7 @@ pub fn rolar_dados(dados : u32,lados : u32,vezes : u32, modif : &str, min :u32, 
     resp
 }
 
-pub fn dado_iniciativa(bonux : u32) -> (u32,String){
+pub fn dado_iniciativa(bonux : u32, pessoa : &str) -> (u32,String){
 
     let mut rng = rand::rng();
     let x : u32;
@@ -189,8 +189,19 @@ pub fn dado_iniciativa(bonux : u32) -> (u32,String){
         resposta.push(' ');
     }
 
-    resposta.push(']');
-    resposta.push('→');
+    resposta.push('+');
+    resposta.push(' ');
+    resposta.push_str(bonux.to_string().as_str());
+    
+    resposta.push(' ');
+    resposta.push_str("->");
+    resposta.push(' ');
+    
+    resposta.push_str(pessoa);
+    
+    resposta.push(':');
+    
+    
 
     if  x >= 7{
         resposta.push_str(" **");
