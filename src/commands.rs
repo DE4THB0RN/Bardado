@@ -1,3 +1,4 @@
+use rand::Rng;
 use crate::{statuses, Context, Error};
 use crate::dado::{dado_iniciativa, rolar_dados};
 
@@ -44,22 +45,14 @@ pub async fn iniciativa (
     #[description = "Nome do personagem"] persona : String
 ) -> Result<(), Error> {
 
-    let per = persona.clone();
     let x = dado_iniciativa(bonus);
     {
         let mudar = &mut statuses::INICIA_GERAL.lock().unwrap().inis;
 
-        mudar.insert(persona,x);
+        mudar.insert(persona,x.0);
     }
 
-    let mut resposta = String::new();
-
-    resposta.push_str("Iniciativa ");
-    resposta.push_str(per.as_str());
-    resposta.push_str(": ");
-    resposta.push_str(x.to_string().as_str());
-
-    ctx.say(resposta).await?;
+    ctx.say(x.1).await?;
 
     Ok(())
 }
@@ -148,6 +141,47 @@ pub async fn listar_iniciativa (
         x += 1;
     }
     
+    ctx.say(resposta).await?;
+
+    Ok(())
+}
+
+///Aqui o link do Kanka
+#[poise::command(slash_command,prefix_command)]
+pub async fn kanka (
+    ctx: Context<'_>,
+) -> Result<(), Error>{
+
+    let mut extra = String::new();
+
+
+    if ctx.author().id == 442739973960237057 || ctx.author().id == 1064209850483093655{
+        extra.push('\n');
+        extra.push_str("2000, só leia em dia de RPG");
+    }
+
+
+    let tem_extra = {
+        let mut rng = rand::rng();
+        let x : u32 = rng.random_range(1..=20);
+        let mut resposta = false;
+        if x == 20 {
+            resposta = true;
+        }
+        resposta
+    };
+
+    if tem_extra {
+        extra.push('\n');
+        extra.push_str("NÃO SE ESQUEÇA DE LER CLASSE ESPECIAL I E II LINK AQUI NO CANAL <#893280249004060702>");
+    }
+
+    let mut resposta = String::from("Aqui o link do Kanka: https://app.kanka.io/w/285561");
+
+    if !extra.is_empty(){
+        resposta.push_str(extra.as_str());
+    }
+
     ctx.say(resposta).await?;
 
     Ok(())

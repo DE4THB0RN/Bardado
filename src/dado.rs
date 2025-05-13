@@ -60,7 +60,7 @@ pub fn rolar_dado(lados : &u32,vezes : &u32, modif : &str, min : &u32, compare :
             tudo.push_str(&inst);
             tudo.push_str("** ");
         }
-        else if x <= xvezes + 1 && xlados >= 4 {
+        else if x <= minimum + 1 && xlados >= 4 {
             tudo.push(' ');
             tudo.push('*');
             tudo.push_str(&inst);
@@ -160,13 +160,58 @@ pub fn rolar_dados(dados : u32,lados : u32,vezes : u32, modif : &str, min :u32, 
     resp
 }
 
-pub fn dado_iniciativa(bonux : u32) -> u32{
+pub fn dado_iniciativa(bonux : u32) -> (u32,String){
 
     let mut rng = rand::rng();
     let x : u32;
     x = rng.random_range(1..=8);
+    let total = x + bonux;
     
-    x + bonux
+    let mut resposta = String::from("[");
+    let inst : String = x.to_string();
+    let tot = total.to_string();
+
+    if x >= 7 {
+        resposta.push_str(" **");
+        resposta.push_str(&inst);
+        resposta.push_str("** ");
+    }
+    else if x <= 2 {
+        resposta.push(' ');
+        resposta.push('*');
+        resposta.push_str(&inst);
+        resposta.push('*');
+        resposta.push(' ');
+    }
+    else{
+        resposta.push(' ');
+        resposta.push_str(&inst);
+        resposta.push(' ');
+    }
+
+    resposta.push(']');
+    resposta.push('→');
+
+    if  total >= 7{
+        resposta.push_str(" **");
+        resposta.push_str(&tot);
+        resposta.push_str("** ");
+        resposta.push_str(" **CRITIQUEI**");
+    }
+    else if total <= 2{
+        resposta.push(' ');
+        resposta.push('*');
+        resposta.push_str(&tot);
+        resposta.push('*');
+        resposta.push(' ');
+        resposta.push_str(" ou nou");
+    }
+    else{
+        resposta.push(' ');
+        resposta.push_str(&tot);
+    }
+    
+    (total,resposta)
 }
 
 pub fn processar_dado(data: &str) -> String{
