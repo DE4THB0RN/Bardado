@@ -69,6 +69,7 @@ async fn main(#[shuttle_runtime::Secrets] secret_store: SecretStore) -> ShuttleS
                 commands::iniciativa(),
                 commands::limpar_iniciativa(),
                 commands::listar_iniciativa(),
+                commands::mudar_iniciativa(),
             ], //
             ..Default::default()
 

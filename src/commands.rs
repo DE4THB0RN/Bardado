@@ -64,6 +64,34 @@ pub async fn iniciativa (
     Ok(())
 }
 
+///Atualiza a lista de iniciativa
+#[poise::command(slash_command,prefix_command)]
+pub async fn mudar_iniciativa(
+    ctx: Context<'_>,
+    #[description = "Valor de iniciativa"] valor : u32,
+    #[description = "Nome do personagem"] persona : String
+) -> Result<(), Error>{
+
+    let per = persona.clone();
+    {
+        let mudar = &mut statuses::INICIA_GERAL.lock().unwrap().inis;
+
+        mudar.insert(persona,valor);
+    }
+
+    let mut resposta = String::new();
+
+    resposta.push_str("Iniciativa ");
+    resposta.push_str(per.as_str());
+    resposta.push_str(": ");
+    resposta.push_str(valor.to_string().as_str());
+
+    ctx.say(resposta).await?;
+
+
+    Ok(())
+}
+
 ///Limpa a lista de iniciativa
 #[poise::command(slash_command,prefix_command)]
 pub async fn limpar_iniciativa (
