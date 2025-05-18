@@ -188,6 +188,8 @@ pub fn dado_iniciativa(bonux : u32, pessoa : &str) -> (u32,String){
         resposta.push_str(&inst);
         resposta.push(' ');
     }
+    resposta.push(']');
+    resposta.push(' ');
 
     resposta.push('+');
     resposta.push(' ');

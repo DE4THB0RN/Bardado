@@ -45,7 +45,7 @@ pub async fn iniciativa (
     #[description = "Nome do personagem"] persona : String
 ) -> Result<(), Error> {
 
-    let x = dado_iniciativa(bonus);
+    let x = dado_iniciativa(bonus,persona.as_str());
     {
         let mudar = &mut statuses::INICIA_GERAL.lock().unwrap().inis;
 
