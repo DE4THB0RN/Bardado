@@ -1,6 +1,9 @@
 mod commands;
 mod eventos;
 mod secret;
+mod dado;
+mod music;
+mod status;
 
 use poise::{PrefixFrameworkOptions};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
