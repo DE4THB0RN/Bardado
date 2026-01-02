@@ -3,13 +3,20 @@ mod eventos;
 mod secret;
 mod dado;
 mod music;
-mod status;
+mod statuses;
 
 use poise::{PrefixFrameworkOptions};
 use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use anyhow::Context as _;
+use lavalink_rs::client::LavalinkClient;
+use lavalink_rs::model::events;
+use lavalink_rs::node::NodeBuilder;
+use lavalink_rs::prelude::NodeDistributionStrategy;
+use songbird::SerenityInit;
 
-
-struct Data {} // User data, which is stored and accessible in all command invocations
+struct Data {
+    pub lavalink : LavalinkClient,
+} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -18,7 +25,13 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 #[tokio::main]
 async fn main() {
 
-    let discord_token = secret::get_discord_token();
+    let discord_token : String = secret_store
+        .get("DISCORD_TOKEN")
+        .context("'DISCORD_TOKEN' was not found")?;
+
+    let lavalink_password : String = secret_store
+        .get("LAVALINK_PASSWORD")
+        .context("'LAVALINK_PASSWORD' was not found")?;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -37,25 +50,70 @@ async fn main() {
                 case_insensitive_commands: true,
                 __non_exhaustive: (),
             },
-            commands: vec![commands::hello()], //
+            commands: vec![ music::music_basic::play(),
+                            music::music_basic::venha(),
+                            music::music_basic::adeus(),
+                            music::music_advanced::queue(),
+                            music::music_advanced::skip(),
+                            music::music_advanced::pause(),
+                            music::music_advanced::resume(),
+                            music::music_advanced::stop(),
+                            music::music_advanced::seek(),
+                            music::music_advanced::clear(),
+                            music::music_advanced::remove(),
+                            music::music_advanced::swap(),
+                            music::music_advanced::repete(), //Vamo lá,aparece aí
+                            commands::dad0(),
+                            commands::iniciativa(),
+                            commands::limpar_iniciativa(),
+                            commands::listar_iniciativa(),
+                            commands::mudar_iniciativa(),
+                            commands::kanka(),], //
             ..Default::default()
 
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {})
+
+                let events = events::Events {
+                    raw: Some(music::music_events::raw_event),
+                    ready: Some(music::music_events::ready_event),
+                    track_start: Some(music::music_events::track_start),
+                    ..Default::default()
+                };
+
+                let usrid : u64 = ctx.cache.current_user().id.into();
+
+                let node_local = NodeBuilder {
+                    hostname: "lavalink.jirayu.net:13592".to_string(),
+                    is_ssl: false,
+                    events: events::Events::default(),
+                    password: lavalink_password,
+                    user_id: usrid.into(),
+                    session_id: None,
+                };
+
+                let client = LavalinkClient::new(
+                    events,
+                    vec![node_local],
+                    NodeDistributionStrategy::round_robin(),
+                ).await;
+
+
+                Ok(Data { lavalink: client })
             })
         })
         .build();
 
     let client = ClientBuilder::new(discord_token,
-        GatewayIntents::non_privileged() |
-        GatewayIntents::MESSAGE_CONTENT
+                                    GatewayIntents::non_privileged() |
+                                        GatewayIntents::MESSAGE_CONTENT
     )
+        .register_songbird()
         .event_handler(eventos::Handler)
         .framework(framework)
         .await;
 
-    client.unwrap().start().await.unwrap();
+    Ok(client.into())
 }
