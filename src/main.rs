@@ -5,25 +5,45 @@ mod music;
 mod secret;
 mod statuses;
 
-use lavalink_rs::client::LavalinkClient;
-use lavalink_rs::model::events;
-use lavalink_rs::node::NodeBuilder;
-use lavalink_rs::prelude::NodeDistributionStrategy;
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents, GuildId};
 use poise::PrefixFrameworkOptions;
+use reqwest::Client;
+use serenity::prelude::TypeMapKey;
 use songbird::SerenityInit;
+use tokio::sync::RwLock;
+use tokio_util::sync::CancellationToken;
 
 struct Data {
-    pub lavalink: LavalinkClient,
+    pub playlist_cancel_tokens: Arc<RwLock<HashMap<GuildId, CancellationToken>>>,
 } // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
+struct HttpKey;
+
+impl TypeMapKey for HttpKey {
+    type Value = Client;
+}
+
+impl Data {
+    pub fn new() -> Self {
+        Self {
+            playlist_cancel_tokens: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+}
+
+impl Default for Data {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[tokio::main]
 async fn main() {
     let discord_token: String = secret::get_token();
-
-    let lavalink_password: String = secret::get_password();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -43,19 +63,19 @@ async fn main() {
                 __non_exhaustive: (),
             },
             commands: vec![
-                music::music_basic::play(),
-                music::music_basic::venha(),
-                music::music_basic::adeus(),
-                music::music_advanced::queue(),
-                music::music_advanced::skip(),
-                music::music_advanced::pause(),
-                music::music_advanced::resume(),
-                music::music_advanced::stop(),
-                music::music_advanced::seek(),
-                music::music_advanced::clear(),
-                music::music_advanced::remove(),
-                music::music_advanced::swap(),
-                music::music_advanced::repete(), //Vamo lá,aparece aí
+                music::music_basic::play::play(),
+                music::music_basic::venha::venha(),
+                music::music_basic::adeus::adeus(),
+                // music::music_advanced::queue(),
+                // music::music_advanced::skip(),
+                // music::music_advanced::pause(),
+                // music::music_advanced::resume(),
+                // music::music_advanced::stop(),
+                // music::music_advanced::seek(),
+                // music::music_advanced::clear(),
+                // music::music_advanced::remove(),
+                // music::music_advanced::swap(),
+                // music::music_advanced::repete(), //Vamo lá,aparece aí
                 commands::dad0(),
                 commands::iniciativa(),
                 commands::limpar_iniciativa(),
@@ -69,32 +89,7 @@ async fn main() {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
 
-                let events = events::Events {
-                    raw: Some(music::music_events::raw_event),
-                    ready: Some(music::music_events::ready_event),
-                    track_start: Some(music::music_events::track_start),
-                    ..Default::default()
-                };
-
-                let usrid: u64 = ctx.cache.current_user().id.into();
-
-                let node_local = NodeBuilder {
-                    hostname: "lavalink.jirayu.net:13592".to_string(),
-                    is_ssl: false,
-                    events: events::Events::default(),
-                    password: lavalink_password,
-                    user_id: usrid.into(),
-                    session_id: None,
-                };
-
-                let client = LavalinkClient::new(
-                    events,
-                    vec![node_local],
-                    NodeDistributionStrategy::round_robin(),
-                )
-                .await;
-
-                Ok(Data { lavalink: client })
+                Ok(Data::new())
             })
         })
         .build();
@@ -106,6 +101,7 @@ async fn main() {
     .register_songbird()
     .event_handler(eventos::Handler)
     .framework(framework)
+    .type_map_insert::<HttpKey>(Client::new())
     .await;
 
     client.unwrap().start().await.unwrap();
