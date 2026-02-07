@@ -1,41 +1,33 @@
 mod commands;
-mod eventos;
-mod secret;
 mod dado;
+mod eventos;
 mod music;
+mod secret;
 mod statuses;
 
-use poise::{PrefixFrameworkOptions};
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
-use anyhow::Context as _;
 use lavalink_rs::client::LavalinkClient;
 use lavalink_rs::model::events;
 use lavalink_rs::node::NodeBuilder;
 use lavalink_rs::prelude::NodeDistributionStrategy;
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use poise::PrefixFrameworkOptions;
 use songbird::SerenityInit;
 
 struct Data {
-    pub lavalink : LavalinkClient,
+    pub lavalink: LavalinkClient,
 } // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
-
-
 #[tokio::main]
 async fn main() {
+    let discord_token: String = secret::get_token();
 
-    let discord_token : String = secret_store
-        .get("DISCORD_TOKEN")
-        .context("'DISCORD_TOKEN' was not found")?;
-
-    let lavalink_password : String = secret_store
-        .get("LAVALINK_PASSWORD")
-        .context("'LAVALINK_PASSWORD' was not found")?;
+    let lavalink_password: String = secret::get_password();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            prefix_options: PrefixFrameworkOptions{
+            prefix_options: PrefixFrameworkOptions {
                 prefix: Some("!".into()),
                 additional_prefixes: vec![],
                 dynamic_prefix: None,
@@ -50,27 +42,28 @@ async fn main() {
                 case_insensitive_commands: true,
                 __non_exhaustive: (),
             },
-            commands: vec![ music::music_basic::play(),
-                            music::music_basic::venha(),
-                            music::music_basic::adeus(),
-                            music::music_advanced::queue(),
-                            music::music_advanced::skip(),
-                            music::music_advanced::pause(),
-                            music::music_advanced::resume(),
-                            music::music_advanced::stop(),
-                            music::music_advanced::seek(),
-                            music::music_advanced::clear(),
-                            music::music_advanced::remove(),
-                            music::music_advanced::swap(),
-                            music::music_advanced::repete(), //Vamo lá,aparece aí
-                            commands::dad0(),
-                            commands::iniciativa(),
-                            commands::limpar_iniciativa(),
-                            commands::listar_iniciativa(),
-                            commands::mudar_iniciativa(),
-                            commands::kanka(),], //
+            commands: vec![
+                music::music_basic::play(),
+                music::music_basic::venha(),
+                music::music_basic::adeus(),
+                music::music_advanced::queue(),
+                music::music_advanced::skip(),
+                music::music_advanced::pause(),
+                music::music_advanced::resume(),
+                music::music_advanced::stop(),
+                music::music_advanced::seek(),
+                music::music_advanced::clear(),
+                music::music_advanced::remove(),
+                music::music_advanced::swap(),
+                music::music_advanced::repete(), //Vamo lá,aparece aí
+                commands::dad0(),
+                commands::iniciativa(),
+                commands::limpar_iniciativa(),
+                commands::listar_iniciativa(),
+                commands::mudar_iniciativa(),
+                commands::kanka(),
+            ], //
             ..Default::default()
-
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
@@ -83,7 +76,7 @@ async fn main() {
                     ..Default::default()
                 };
 
-                let usrid : u64 = ctx.cache.current_user().id.into();
+                let usrid: u64 = ctx.cache.current_user().id.into();
 
                 let node_local = NodeBuilder {
                     hostname: "lavalink.jirayu.net:13592".to_string(),
@@ -98,22 +91,22 @@ async fn main() {
                     events,
                     vec![node_local],
                     NodeDistributionStrategy::round_robin(),
-                ).await;
-
+                )
+                .await;
 
                 Ok(Data { lavalink: client })
             })
         })
         .build();
 
-    let client = ClientBuilder::new(discord_token,
-                                    GatewayIntents::non_privileged() |
-                                        GatewayIntents::MESSAGE_CONTENT
+    let client = ClientBuilder::new(
+        discord_token,
+        GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
     )
-        .register_songbird()
-        .event_handler(eventos::Handler)
-        .framework(framework)
-        .await;
+    .register_songbird()
+    .event_handler(eventos::Handler)
+    .framework(framework)
+    .await;
 
-    Ok(client.into())
+    client.unwrap().start().await.unwrap();
 }
