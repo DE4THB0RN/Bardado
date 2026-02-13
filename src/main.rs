@@ -43,6 +43,7 @@ impl Default for Data {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let discord_token: String = secret::get_token();
 
     let framework = poise::Framework::builder()
@@ -96,7 +97,11 @@ async fn main() {
 
     let client = ClientBuilder::new(
         discord_token,
-        GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT,
+        GatewayIntents::non_privileged()
+            | GatewayIntents::MESSAGE_CONTENT
+            | GatewayIntents::GUILD_VOICE_STATES
+            | GatewayIntents::GUILD_MESSAGES
+            | GatewayIntents::GUILDS,
     )
     .register_songbird()
     .event_handler(eventos::Handler)

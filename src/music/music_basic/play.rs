@@ -43,7 +43,8 @@ pub async fn play(
         _join(&ctx, None).await?;
     }
 
-    let handler_lock = manager.get(guild_id.clone()).ok_or("Handler not found")?;
+    let handler_lock = manager.get(guild_id).ok_or("Handler not found")?;
+
     let mut handler = handler_lock.lock().await;
 
     let busca = {
@@ -97,17 +98,17 @@ pub async fn play(
             }
         }
 
-        let cancel_toke = CancellationToken::new();
+        let cancel_token = CancellationToken::new();
         {
             let mut tokens = cancel_tokens.write().await;
-            tokens.insert(guild_id.clone(), cancel_toke.clone());
+            tokens.insert(guild_id, cancel_token.clone());
         }
 
         drop(handler);
 
         task::spawn(async move {
             for url in playlist_urls {
-                if cancel_toke.is_cancelled() {
+                if cancel_token.is_cancelled() {
                     break;
                 }
 
@@ -119,13 +120,12 @@ pub async fn play(
                         continue;
                     }
                     Ok(metadata) => {
-                        if cancel_toke.is_cancelled() {
+                        if cancel_token.is_cancelled() {
                             break;
                         }
 
                         let mut handler = handler_clone.lock().await;
-                        let track_handle: songbird::tracks::TrackHandle =
-                            handler.enqueue_input(input).await;
+                        let track_handle = handler.enqueue_input(input).await;
 
                         let song_title = metadata
                             .title
@@ -135,7 +135,7 @@ pub async fn play(
                         let _ = track_handle.add_event(
                             Event::Track(TrackEvent::Play),
                             TrackPlayNotifier {
-                                channel_id: channel_id,
+                                channel_id,
                                 http: Arc::clone(&serenity_http),
                                 song_title: song_title.clone(),
                             },
@@ -149,6 +149,7 @@ pub async fn play(
         });
     } else {
         println!("Chegamos aqui, hora de só uma música");
+
         let src = if busca.starts_with("http") {
             YoutubeDl::new(http_client.clone(), busca.clone())
         } else {
@@ -163,14 +164,14 @@ pub async fn play(
         let mut input: Input = src.into();
 
         let metadata = match input.aux_metadata().await {
-            Ok(x) => x.clone(),
+            Ok(x) => x,
             Err(e) => {
+                println!("Erro em pegar metadata!");
                 return Err(e.into());
             }
         };
 
         let fila = !handler.queue().is_empty();
-
         let track_handle = handler.enqueue_input(input).await;
 
         let song_title = metadata
@@ -182,14 +183,22 @@ pub async fn play(
         track_handle.add_event(
             Event::Track(TrackEvent::Play),
             TrackPlayNotifier {
-                channel_id: channel_id,
+                channel_id,
                 http: Arc::clone(&serenity_http),
                 song_title: song_title.clone(),
             },
         )?;
 
+        println!("Evento adicionado");
+
+        // CORREÇÃO 5: Liberar lock antes de responder
+        drop(handler);
+
         if fila {
             ctx.say(format!("{} adicionado à fila", song_title)).await?;
+        } else {
+            // IMPORTANTE: Avisar que a música começou a tocar
+            ctx.say(format!("Hora de começar: {}", song_title)).await?;
         }
     }
 
