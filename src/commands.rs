@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{RngExt};
 use crate::{statuses, Context, Error};
 use crate::dado::{dado_iniciativa, rolar_dados};
 

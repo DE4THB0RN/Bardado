@@ -1,5 +1,5 @@
 use calc_engine::calculate;
-use rand::Rng;
+use rand::{RngExt};
 use regex::{Regex};
 
 fn pega_formula(modifier : String) -> u32 {
