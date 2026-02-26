@@ -1,37 +1,19 @@
 mod commands;
 mod dado;
 mod eventos;
-mod music;
 mod secret;
 mod statuses;
 
-use std::collections::HashMap;
-use std::sync::Arc;
-
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents, GuildId};
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use poise::PrefixFrameworkOptions;
-use reqwest::Client;
-use serenity::prelude::TypeMapKey;
-use songbird::SerenityInit;
-use tokio::sync::RwLock;
-use tokio_util::sync::CancellationToken;
 
-struct Data {
-    pub playlist_cancel_tokens: Arc<RwLock<HashMap<GuildId, CancellationToken>>>,
-} // User data, which is stored and accessible in all command invocations
+struct Data {} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-struct HttpKey;
-
-impl TypeMapKey for HttpKey {
-    type Value = Client;
-}
 
 impl Data {
     pub fn new() -> Self {
-        Self {
-            playlist_cancel_tokens: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self {}
     }
 }
 
@@ -43,7 +25,6 @@ impl Default for Data {
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
     let discord_token: String = secret::get_token();
 
     let framework = poise::Framework::builder()
@@ -64,19 +45,6 @@ async fn main() {
                 __non_exhaustive: (),
             },
             commands: vec![
-                music::music_basic::play::play(),
-                music::music_basic::venha::venha(),
-                music::music_basic::adeus::adeus(),
-                // music::music_advanced::queue(),
-                // music::music_advanced::skip(),
-                // music::music_advanced::pause(),
-                // music::music_advanced::resume(),
-                // music::music_advanced::stop(),
-                // music::music_advanced::seek(),
-                // music::music_advanced::clear(),
-                // music::music_advanced::remove(),
-                // music::music_advanced::swap(),
-                // music::music_advanced::repete(), //Vamo lá,aparece aí
                 commands::dad0(),
                 commands::iniciativa(),
                 commands::limpar_iniciativa(),
@@ -103,10 +71,8 @@ async fn main() {
             | GatewayIntents::GUILD_MESSAGES
             | GatewayIntents::GUILDS,
     )
-    .register_songbird()
     .event_handler(eventos::Handler)
     .framework(framework)
-    .type_map_insert::<HttpKey>(Client::new())
     .await;
 
     client.unwrap().start().await.unwrap();
