@@ -3,13 +3,26 @@ mod dado;
 mod eventos;
 mod secret;
 mod statuses;
+mod music;
 
-use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
 use poise::PrefixFrameworkOptions;
+use poise::serenity_prelude::{ClientBuilder, GatewayIntents};
+use serenity::prelude::TypeMapKey;
+use crate::eventos::Handler;
+use songbird::SerenityInit;
+use reqwest::Client as HttpClient;
 
-struct Data {} // User data, which is stored and accessible in all command invocations
+struct Data {
+    
+} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
+
+struct HttpKey;
+
+impl TypeMapKey for HttpKey {
+    type Value = HttpClient;
+}
 
 impl Data {
     pub fn new() -> Self {
@@ -21,6 +34,13 @@ impl Default for Data {
     fn default() -> Self {
         Self::new()
     }
+}
+
+async fn get_http_client(ctx: &Context) -> HttpClient {
+    let data = ctx.data();
+    data.get::<HttpKey>()
+        .cloned()
+        .expect("Guaranteed to exist in the typemap.")
 }
 
 #[tokio::main]
@@ -51,7 +71,7 @@ async fn main() {
                 commands::listar_iniciativa(),
                 commands::mudar_iniciativa(),
                 commands::kanka(),
-            ], //
+            ],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
@@ -63,17 +83,20 @@ async fn main() {
         })
         .build();
 
+    let intents = GatewayIntents::non_privileged()
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::GUILD_VOICE_STATES;
+
     let client = ClientBuilder::new(
         discord_token,
-        GatewayIntents::non_privileged()
-            | GatewayIntents::MESSAGE_CONTENT
-            | GatewayIntents::GUILD_VOICE_STATES
-            | GatewayIntents::GUILD_MESSAGES
-            | GatewayIntents::GUILDS,
+        intents
     )
-    .event_handler(eventos::Handler)
-    .framework(framework)
-    .await;
+        .event_handler(Handler)
+        .framework(framework)
+        .register_songbird()
+        .type_map_insert::<HttpKey>(HttpClient::new())
+        .await;
 
     client.unwrap().start().await.unwrap();
 }
